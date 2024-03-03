@@ -41,7 +41,9 @@ jobs:
               git fetch origin
               git checkout ${{ steps.create-issue-branch.outputs.branchName }}
             ```
-
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: "github-actions[bot]"
+          
       - name: choose a pr template
         if: steps.create-issue-branch.outputs.branchName != ''
         id: template
