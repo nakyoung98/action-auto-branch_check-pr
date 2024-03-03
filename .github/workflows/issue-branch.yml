@@ -19,12 +19,6 @@ on:
   issues:
     types: [opened, assigned]
 
-env:
-  PROJECT_BOARD: "TakeShape"
-  ICEBOX_COLUMN_NAME: "Icebox"
-  STARTED_COLUMN_NAME: "In Progress"
-  BEFORE_REVIEW_COLUMN_NAME: "Waiting on Review"
-
 jobs:
   create-issue-branch:
     name: "create issue branch"
@@ -36,6 +30,17 @@ jobs:
         id: create-issue-branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: add git command in comment
+        uses: mshick/add-pr-comment@v2
+        if: steps.create-issue-branch.outputs.branchName != ''
+        with:
+          message: |
+            ### copy git command below
+            ```
+              git fetch origin
+              git checkout ${{ steps.create-issue-branch.outputs.branchName }}
+            ```
 
       - name: choose a pr template
         if: steps.create-issue-branch.outputs.branchName != ''
