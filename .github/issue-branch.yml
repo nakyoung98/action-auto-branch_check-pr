@@ -1,3 +1,4 @@
+type: immediate
 defaultBranch: develop
 branchName: "issue-${issue.number}-${issue.title[0,32]}"
 autoLinkIssue: true
