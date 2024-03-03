@@ -23,7 +23,7 @@ jobs:
   create-issue-branch:
     name: "create issue branch"
     runs-on: ubuntu-latest
-    if: github.event.action == 'assigned'
+    if: github.event.action == 'opened'
     steps:
       - name: create the issue branch
         uses: robvanderleek/create-issue-branch@main
