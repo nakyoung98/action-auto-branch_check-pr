@@ -9,5 +9,7 @@ branches:
     prefix: feature/
   - label: bug
     prefix: fix/
+  - label: refactor
+    prefix: refactor/
   - label : '*'
     prefix: feature/
