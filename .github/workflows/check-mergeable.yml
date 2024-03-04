@@ -62,9 +62,5 @@ jobs:
             ### 올바른 PR 형식
             올바른 PR 형식입니다.
             코드 작성하시느라 수고 많으셨습니다 :)
-
-            ### 참고
-            PR요청 전 deveop 브랜치에 변동이 있을 경우 꼭! feature 브랜치를 rebase 해주세요.
-            현재 시점에서 Merge 시 **Conflict**의 위험이 있습니다.
             
           repo-token: ${{ secrets.GITHUB_TOKEN }}
