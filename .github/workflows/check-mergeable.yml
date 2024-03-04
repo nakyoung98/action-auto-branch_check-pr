@@ -38,20 +38,33 @@ jobs:
             echo "::set-output name=mergeType::three-way"
           fi
 
-      - name: comment decline pr
-        id: comment_decline_pr
-        run: |
-          if [[ "${{ steps.check_is_ancestor.outputs.mergeType }}" == "three-way" ]]; then
-            curl \
-            -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-            -d '{"body":"올바르지 않은 PR 형식입니다. \nPR요청 전 deveop 브랜치에 변동이 있을 경우 꼭! feature 브랜치를 rebase 해주세요. \n현재 시점에서 Merge 시 Conflict의 위험이 있습니다."}'
-          else
-            curl \
-            -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-            -d '{"body":"정상적인 PR 요청입니다."}'
+      - name: add decline command in comment
+        uses: mshick/add-pr-comment@v2
+        if: if [[ "${{ steps.check_is_ancestor.outputs.mergeType }}" == "three-way" ]]
+        with:
+          message-id: git-decline-command-comment
+          message: |
+            ### 올바르지 않은 PR 형식
+            올바르지 않은 PR 형식입니다.
+
+            ### 참고
+            PR요청 전 deveop 브랜치에 변동이 있을 경우 꼭! feature 브랜치를 rebase 해주세요.
+            현재 시점에서 Merge 시 **Conflict**의 위험이 있습니다.
+            
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: add accept command in comment
+        uses: mshick/add-pr-comment@v2
+        if: if [[ "${{ steps.check_is_ancestor.outputs.mergeType }}" == "fast-forward" ]]
+        with:
+          message-id: git-accept-command-comment
+          message: |
+            ### 올바른 PR 형식
+            올바른 PR 형식입니다.
+            코드 작성하시느라 수고 많으셨습니다 :)
+
+            ### 참고
+            PR요청 전 deveop 브랜치에 변동이 있을 경우 꼭! feature 브랜치를 rebase 해주세요.
+            현재 시점에서 Merge 시 **Conflict**의 위험이 있습니다.
+            
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
