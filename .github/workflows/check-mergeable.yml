@@ -40,7 +40,7 @@ jobs:
 
       - name: add decline command in comment
         uses: mshick/add-pr-comment@v2
-        if: steps.check_is_ancestor.outputs.mergeType == "three-way"
+        if: steps.check_is_ancestor.outputs.mergeType == 'three-way'
         with:
           message-id: git-decline-command-comment
           message: |
@@ -55,7 +55,7 @@ jobs:
 
       - name: add accept command in comment
         uses: mshick/add-pr-comment@v2
-        if: steps.check_is_ancestor.outputs.mergeType == "fast-forward"
+        if: steps.check_is_ancestor.outputs.mergeType == 'fast-forward'
         with:
           message-id: git-accept-command-comment
           message: |
