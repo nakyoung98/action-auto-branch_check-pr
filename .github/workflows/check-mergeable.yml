@@ -17,9 +17,10 @@ jobs:
       # PR을 만든 브랜치의 최신 커밋으로 체크아웃해야함
       - name: checkout feature branch
         id: checkout_feature_branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@4
         with:
           ref: ${{ github.head_ref }}
+          fetch-depth: 0
 
       - name: check is ancestor
         id: check_is_ancestor
