@@ -35,7 +35,7 @@ jobs:
           node-version: ${{env.node-version || 'latest'}}
         
       - name: node 버전 출력
-        run: echo ${{node --version}}
+        run: node --version
       
           
         
