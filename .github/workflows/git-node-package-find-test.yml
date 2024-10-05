@@ -51,5 +51,5 @@ jobs:
             echo "== 종속성 설치 =="
             npm install
             echo "== 빌드 =="
-            npm run $BUILD_SCRIPT || npm run build || true
+            npm run ${BUILD_SCRIPT:-build}
             ' sh {} \;
