@@ -39,6 +39,16 @@ jobs:
       
       - name: package.json 파일 찾기
       # 절대 경로로 찾기
+      # 경로로 이동하기
+      # 종속성 설치 및 빌드
         run: |
-          find $(pwd) -name package.json -exec echo {}  \;
+          find -name package.json -exec sh -c '
+            dir=$(dirname "$1")
+            cd $1
+            echo "== 종속성 설치 =="
+            npm install
+            echo "== 빌드 =="
+            npm $(env.build-script || "build") || true
+            ' sh {}
+            \;
         
