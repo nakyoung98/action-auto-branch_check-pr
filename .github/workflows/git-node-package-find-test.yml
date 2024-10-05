@@ -48,5 +48,5 @@ jobs:
             echo "== 종속성 설치 =="
             npm install
             echo "== 빌드 =="
-            npm $(env.build-script || "build") || true
+            npm run $(env.build-script || "build") || true
             ' sh {} \;
