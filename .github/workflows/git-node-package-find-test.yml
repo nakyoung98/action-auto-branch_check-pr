@@ -38,6 +38,7 @@ jobs:
         run: echo $(node --version)
       
       - name: package.json 파일 찾기
+      # 절대 경로로 찾기
         run: |
-          find . -name package.json -exec dirname {}  \;
+          find $(pwd) -name package.json -exec echo {}  \;
         
