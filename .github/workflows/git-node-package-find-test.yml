@@ -32,15 +32,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           #노드 버전 (환경변수에 저장해놔야 함)
-          node-version: ${{env.node-version || 'latest'}}
+          node-version: ${{vars.node-version || 'latest'}}
         
       - name: node 버전 출력
         run: echo $(node --version)
       
       - name: package.json 파일 찾기
+        env:
+          BUILD_SCRIPT: ${{vars.build-script}}
+        
       # 절대 경로로 찾기
       # 경로로 이동하기
-      # 종속성 설치 및 빌드
+      # 종속성 설치 및 빌드 (환경변수에 없으면, npm run build 시도, 실패해도 중단하지 않음)
         run: |
           find -name package.json -exec sh -c '
             dir=$(dirname "$1")
@@ -48,5 +51,5 @@ jobs:
             echo "== 종속성 설치 =="
             npm install
             echo "== 빌드 =="
-            npm run $(env.build-script || "build") || true
+            npm run $BUILD_SCRIPT || npm run build || true
             ' sh {} \;
