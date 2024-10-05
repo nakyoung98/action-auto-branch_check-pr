@@ -44,11 +44,9 @@ jobs:
         run: |
           find -name package.json -exec sh -c '
             dir=$(dirname "$1")
-            cd $1
+            cd $dir
             echo "== 종속성 설치 =="
             npm install
             echo "== 빌드 =="
             npm $(env.build-script || "build") || true
-            ' sh {}
-            \;
-        
+            ' sh {} \;
