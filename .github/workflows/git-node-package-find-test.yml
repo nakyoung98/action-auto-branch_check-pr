@@ -43,13 +43,32 @@ jobs:
         
       # 절대 경로로 찾기
       # 경로로 이동하기
-      # 종속성 설치 및 빌드 (환경변수에 없으면, npm run build 시도, 실패해도 중단하지 않음)
+      # ci로 종속성 설치 및 빌드 (환경변수에 없으면, npm run build 시도, 실패해도 중단하지 않음)
         run: |
           find -name package.json -exec sh -c '
             dir=$(dirname "$1")
             cd $dir
             echo "== 종속성 설치 =="
-            npm install
+            npm ci
+            set -e
             echo "== 빌드 =="
             npm run ${BUILD_SCRIPT:-build}
             ' sh {} \;
+
+      # https://octokit.github.io/rest.js/v21/#pulls 를 따릅니다
+      - name: Comment PR
+        uses: actions/github-script@v6
+        if: always()
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const output = `#### 빌드 테스트 결과: ${{ job.status }}`;
+            const reviewResult = ${{ job.status }} === "success" ? 'APPROVE' : 'REQUEST_CHANGES';
+            
+            github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              event: reviewResult,
+              body: output
+            }); 
