@@ -63,7 +63,7 @@ jobs:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             const output = `#### 빌드 테스트 결과: ${{ job.status }}`;
-            const reviewResult = ${{ job.status }} === "success" ? 'APPROVE' : 'REQUEST_CHANGES';
+            const reviewResult = `${{ job.status }}` === "success" ? 'APPROVE' : 'REQUEST_CHANGES';
             
             github.rest.pulls.createReview({
               owner: context.repo.owner,
