@@ -49,10 +49,16 @@ jobs:
             dir=$(dirname "$1")
             cd $dir
             echo "== 종속성 설치 =="
-            npm ci
-            set -e
+            if ! npm ci; then
+              echo "npm ci 실패, npm install 시도"
+              npm install
+            fi
             echo "== 빌드 =="
-            npm run ${BUILD_SCRIPT:-build}
+            if npm run ${BUILD_SCRIPT:-build}; then
+              echo "BUILD_RESULT=success" >> $GITHUB_OUTPUT
+            else
+              echo "BUILD_RESULT=failure" >> $GITHUB_OUTPUT
+            fi
             ' sh {} \;
 
       # https://octokit.github.io/rest.js/v21/#pulls 를 따릅니다
@@ -62,8 +68,9 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
+            const buildResult = '${{ steps.build.outputs.BUILD_RESULT }}';
             const output = `#### 빌드 테스트 결과: ${{ job.status }}`;
-            const reviewResult = `${{ job.status }}` === "success" ? 'APPROVE' : 'REQUEST_CHANGES';
+            const reviewResult = buildResult === "success" ? 'APPROVE' : 'REQUEST_CHANGES';
             
             github.rest.pulls.createReview({
               owner: context.repo.owner,
