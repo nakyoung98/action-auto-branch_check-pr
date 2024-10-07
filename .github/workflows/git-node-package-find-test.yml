@@ -84,6 +84,7 @@ jobs:
 
           # 결과를 steps.build에 저장 - 다른 곳에서 사용 가능
           echo "BUILD_RESULT=${build_result}" >> $GITHUB_OUTPUT
+          echo "BUILD_DIST_DIR=${package_json}" >> $GITHUB_OUTPUT
           echo "NO_PACKAGE_JSON=${no_package_json}" >> $GITHUB_OUTPUT
 
       # https://octokit.github.io/rest.js/v21/#pulls 를 따릅니다
@@ -122,5 +123,5 @@ jobs:
       - name: build 파일 artifact로 내보내기
         uses: actions/upload-artifact@v4
         with:
-          name: build
-          path:
+          name: build-output
+          path: ${{steps.build.outputs.BUILD_DIST_DIR}}
