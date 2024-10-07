@@ -80,6 +80,7 @@ jobs:
             else
               echo "프로젝트 빌드 실패"
             fi
+          fi
 
           # 결과를 steps.build에 저장 - 다른 곳에서 사용 가능
           echo "BUILD_RESULT=${build_result}" >> $GITHUB_OUTPUT
