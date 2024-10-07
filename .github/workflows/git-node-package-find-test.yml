@@ -46,31 +46,66 @@ jobs:
       # 경로로 이동하기
       # ci로 종속성 설치 및 빌드 (환경변수에 없으면, npm run build 시도, 실패해도 중단하지 않음)
         run: |
-          find -name package.json -exec sh -c '
-            dir=$(dirname "$1")
-            cd $dir
-            echo "== 종속성 설치 =="
-            if ! npm ci; then
-              echo "npm ci 실패, npm install 시도"
-              npm install
-            fi
-            echo "== 빌드 =="
-            if npm run ${BUILD_SCRIPT:-build}; then
-              echo "BUILD_RESULT=success" >> $GITHUB_OUTPUT
-            else
-              echo "BUILD_RESULT=failure" >> $GITHUB_OUTPUT
-            fi
-            ' sh {} \;
+          build_script = ${{env.BUILD_SCRIPT}}
+          
+          package_jsons=$(find $(pwd) -name package.json)
+          if [ -z "$package_jsons" ]; then
+            echo "NO_PACKAGE_JSON=true" >> $GITHUB_OUTPUT
+            echo "package.json 파일을 찾을 수 없습니다."
+          else
+            all_success="success"
+            each_results=""
 
+            set +e
+            while IFS= read -r package_json
+            do
+              build_result="success"
+              
+              dir=$(dirname "$package_json")
+              echo "처리 중: $dir"
+              cd "$dir"
+              
+              echo "== 종속성 설치 =="
+              if ! npm ci; then
+                echo "npm ci 실패, npm install을 시도합니다"
+                if ! npm install; then
+                  echo "npm install 실패"
+                  build_result="fail"
+                fi
+              fi
+
+              echo "== 프로젝트 빌드 =="
+              if ! npm run ${build_script:-build}; then
+                build_result="fail"
+              fi
+
+              if  [ "$build_result"="success" ]; then
+                echo "프로젝트 빌드 성공"
+                each_results+="$dir: success\n"
+              else
+                echo "프로젝트 빌드 실패"
+                each_results+="$dir: fail\n"
+                all_success="fail"
+              fi
+            done <<< "$package_jsons"
+            echo "OVERALL_BUILD_RESULT=${all_success)" >> $GITHUB_OUTPUT
+            echo "EACH_BUILD_RESULTS=${each_results}" >> $GITHUB_OUTPUT
+          fi
+          
+              
       # https://octokit.github.io/rest.js/v21/#pulls 를 따릅니다
       - name: Comment PR
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         if: always()
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const buildResult = '${{ steps.build.outputs.BUILD_RESULT }}';
-            const output = `#### 빌드 테스트 결과: ${{ job.status }}`;
+            const buildResult = '${{ steps.build.outputs.OVERALL_BUILD_RESULT }}';
+            const eachResults= '${{ steps.build.outputs.EACH_BUILD_RESULTS }}';
+            const output = `
+            #### 빌드 테스트 결과: ${buildResult}
+            ${eachResults}
+            `;
             const reviewResult = buildResult === "success" ? 'APPROVE' : 'REQUEST_CHANGES';
             
             github.rest.pulls.createReview({
