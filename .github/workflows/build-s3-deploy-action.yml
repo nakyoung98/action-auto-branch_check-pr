@@ -28,7 +28,10 @@ jobs:
         run: |
           # AWS CLI v2 설치
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+
+          echo "::group::AWS CLI 압축 해제"
           unzip awscliv2.zip
+          echo "::endgroup::"
 
           echo "== AWS CLI 설치 =="
           echo "::group::AWS CLI 설치"
