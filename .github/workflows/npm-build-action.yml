@@ -1,27 +1,18 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Git Node Package Find Test
+name: Npm Node Build Action
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "develop" branch
   pull_request:
     branches:
       - develop
+  workflow_call:
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  git-node-package-find-test:
-    # The type of runner that the job will run on
+  build:
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: pr 브랜치 체크아웃
         uses: actions/checkout@v4
         with:
@@ -89,7 +80,10 @@ jobs:
           echo "NO_PACKAGE_JSON=${no_package_json}" >> $GITHUB_OUTPUT
 
       # https://octokit.github.io/rest.js/v21/#pulls 를 따릅니다
-      - name: Comment PR
+      # build 성공 시 merge approve 합니다
+      # 그 외의 경우 merge denied 됩니다
+      
+      - name: pr review 하기
         uses: actions/github-script@v7
         if: always()
         with:
@@ -121,8 +115,11 @@ jobs:
               }); 
             }
 
+      # 타 위치에서 워크플로 호출시 build 파일을 사용할 수 있도록, artifact로 업로드해놓습니다
+      # 사용을 원할 경우 outputs.artifact-id를 사용하여 download하면 됩니다
       - name: build 파일 artifact로 내보내기
         uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: ${{steps.build.outputs.BUILD_DIST_DIR}}
+        
