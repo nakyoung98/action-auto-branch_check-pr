@@ -1,5 +1,3 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Npm Node Build Action
 
 on:
@@ -82,7 +80,7 @@ jobs:
       # https://octokit.github.io/rest.js/v21/#pulls 를 따릅니다
       # build 성공 시 merge approve 합니다
       # 그 외의 경우 merge denied 됩니다
-      
+
       - name: pr review 하기
         uses: actions/github-script@v7
         if: always()
@@ -122,4 +120,3 @@ jobs:
         with:
           name: build-output
           path: ${{steps.build.outputs.BUILD_DIST_DIR}}
-        

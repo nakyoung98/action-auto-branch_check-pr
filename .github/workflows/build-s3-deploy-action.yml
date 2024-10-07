@@ -1,0 +1,66 @@
+# Build 된 결과물을 S3에 배포하는 작업입니다.
+# main 브랜치에 push가 발생하면 실행됩니다.
+
+name: Deploy Build Output From Artifact to S3 Action
+
+on:
+  # 추후 삭제해야함
+  push:
+  workflow_call:
+    inputs:
+      build_artifact_id:
+        type: string
+        description: "빌드 결과물 아티팩트 ID"
+        required: true
+
+env:
+  AWS_REGION: ap-northeast-2
+
+permissions:
+  id-token: write # JWT 요청을 위한 권한
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 빌드 결과물 다운로드
+        id: download_build_artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.build_artifact_id }}
+
+      - name: 빌드 결과물 확인
+        run: |
+          ls -al ${{ steps.download_build_artifact.outputs.download-path }}
+
+      - name: AWS SDK 설치
+        run: |
+          # AWS CLI v2 설치
+
+          echo "::group::AWS CLI 다운로드"
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          echo "::endgroup::"
+
+          echo "::group::AWS CLI 압축 해제"
+          unzip awscliv2.zip
+          echo "::endgroup::"
+
+          echo "::group::AWS CLI 설치"
+          sudo ./aws/install --update
+          echo "::endgroup::"
+          echo $(aws --version)
+
+      - name: IAM Role 인증
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          # IAM Role ARN
+          role-to-assume: arn:aws:iam::590184073129:role/s3-web-deployer
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: S3에 빌드 결과물 배포
+        run: |
+          echo "::group::S3에 빌드 결과물 배포"
+          # aws s3 cp --recursive ${{ steps.download_build_artifact.outputs.download-path }} s3://s3-web-deployer
+          echo "::endgroup::"
