@@ -37,7 +37,8 @@ jobs:
       - name: node 버전 출력
         run: echo $(node --version)
       
-      - name: package.json 파일 찾기
+      - name: build 시도
+        id: build
         env:
           BUILD_SCRIPT: ${{vars.build-script}}
         
@@ -45,30 +46,97 @@ jobs:
       # 경로로 이동하기
       # ci로 종속성 설치 및 빌드 (환경변수에 없으면, npm run build 시도, 실패해도 중단하지 않음)
         run: |
-          find -name package.json -exec sh -c '
-            dir=$(dirname "$1")
-            cd $dir
-            echo "== 종속성 설치 =="
-            npm ci
-            set -e
-            echo "== 빌드 =="
-            npm run ${BUILD_SCRIPT:-build}
-            ' sh {} \;
+          build_script=${BUILD_SCRIPT:-build}
+          no_package_json="false"
+          
+          package_jsons=$(find "$(pwd)" -name package.json)
+          if [ -z "$package_jsons" ]; then
+            no_package_json="true"
+            echo "package.json 파일을 찾을 수 없습니다."
+          else
+            all_success="success"
+            each_results=""
 
+            set +e
+            while IFS= read -r package_json
+            do
+              build_result="success"
+              
+              dir=$(dirname "$package_json")
+              echo "처리 중: $dir"
+              cd "$dir"
+              
+              echo "== 종속성 설치 =="
+              if ! npm ci; then
+                echo "npm ci 실패, npm install을 시도합니다"
+                if ! npm install; then
+                  echo "npm install 실패"
+                  build_result="fail"
+                fi
+              fi
+
+              echo "== 프로젝트 빌드 =="
+              if ! npm run $build_script; then
+                echo "빌드 중 에러가 발생했습니다"
+                build_result="fail"
+              fi
+
+              if  [ "$build_result" = "success" ]; then
+                echo "프로젝트 빌드 성공"
+                each_results+="$dir: success\n"
+              else
+                echo "프로젝트 빌드 실패"
+                each_results+="$dir: fail\n"
+                all_success="fail"
+              fi
+            done <<< "$package_jsons"
+
+            # 결과를 steps.build에 저장 - 다른 곳에서 사용 가능
+            echo "OVERALL_BUILD_RESULT=${all_success}" >> $GITHUB_OUTPUT
+            {
+              # 여러줄 저장 (EOF 사용)
+              echo "EACH_BUILD_RESULTS<<EOF"
+              echo "$each_results"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "NO_PACKAGE_JSON=${no_package_json}" >> $GITHUB_OUTPUT
+
+          
+              
       # https://octokit.github.io/rest.js/v21/#pulls 를 따릅니다
       - name: Comment PR
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         if: always()
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const output = `#### 빌드 테스트 결과: ${{ job.status }}`;
-            const reviewResult = `${{ job.status }}` === "success" ? 'APPROVE' : 'REQUEST_CHANGES';
+            const noPackageJSON ='${{ steps.build.outputs.NO_PACKAGE_JSON }}';
+            const buildResult = '${{ steps.build.outputs.OVERALL_BUILD_RESULT }}';
+            const eachResults= '${{ steps.build.outputs.EACH_BUILD_RESULTS }}';
+            const reviewResult = noPackageJSON === "false" && buildResult === "success" ? 'APPROVE' : 'REQUEST_CHANGES';
             
-            github.rest.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              event: reviewResult,
-              body: output
-            }); 
+            const output = `
+            #### 빌드 테스트 결과: ${buildResult}
+            ${eachResults}
+            `;
+
+            if (noPackageJSON === "true"){
+              github.rest.pulls.createReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                event: reviewResult,
+                body: '빌드 가능한 프로젝트가 없습니다. 다시 한번 확인해주세요'
+              }); 
+            }else {
+              github.rest.pulls.createReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                event: reviewResult,
+                body: output
+              }); 
+            }
+
