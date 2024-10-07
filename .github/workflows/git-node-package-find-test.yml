@@ -37,7 +37,8 @@ jobs:
       - name: node 버전 출력
         run: echo $(node --version)
       
-      - name: package.json 파일 찾기
+      - name: build 시도
+        id: build
         env:
           BUILD_SCRIPT: ${{vars.build-script}}
         
