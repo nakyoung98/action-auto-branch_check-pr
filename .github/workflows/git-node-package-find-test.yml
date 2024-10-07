@@ -77,10 +77,11 @@ jobs:
 
               echo "== 프로젝트 빌드 =="
               if ! npm run $build_script; then
+                echo "빌드 중 에러가 발생했습니다"
                 build_result="fail"
               fi
 
-              if  [ "$build_result"="success" ]; then
+              if  [ "$build_result" = "success" ]; then
                 echo "프로젝트 빌드 성공"
                 each_results+="$dir: success\n"
               else
