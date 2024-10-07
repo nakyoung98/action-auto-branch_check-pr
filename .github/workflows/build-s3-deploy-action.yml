@@ -1,0 +1,34 @@
+# Build 된 결과물을 S3에 배포하는 작업입니다.
+# main 브랜치에 push가 발생하면 실행됩니다.
+
+name: Deploy Build Output From Artifact to S3 Action
+
+on:
+  push:
+  workflow_call:
+    inputs:
+      build_artifact_id:
+        type: string
+        description: "빌드 결과물 아티팩트 ID"
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 빌드 결과물 다운로드
+        id: download_build_artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.build_artifact_id }}
+
+      - name: AWS SDK 설치
+        run: |
+          sudo apt install curl unzip -y
+
+          # AWS CLI v2 설치
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+          echo $(aws --version)
