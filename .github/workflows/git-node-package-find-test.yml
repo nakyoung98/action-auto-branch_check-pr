@@ -84,7 +84,7 @@ jobs:
 
           # 결과를 steps.build에 저장 - 다른 곳에서 사용 가능
           echo "BUILD_RESULT=${build_result}" >> $GITHUB_OUTPUT
-          dist_dir=$(dirname "$(find .  -type d -name 'dist' -not -path '*/node_modules/*' )")
+          dist_dir=$(dirname "$package_json")/dist
           echo "BUILD_DIST_DIR=${dist_dir}" >> $GITHUB_OUTPUT
           echo "NO_PACKAGE_JSON=${no_package_json}" >> $GITHUB_OUTPUT
 
