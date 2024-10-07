@@ -46,7 +46,7 @@ jobs:
       # 경로로 이동하기
       # ci로 종속성 설치 및 빌드 (환경변수에 없으면, npm run build 시도, 실패해도 중단하지 않음)
         run: |
-          build_script = ${{env.BUILD_SCRIPT}}
+          build_script = ${{env.BUILD_SCRIPT}} || build
           
           package_jsons=$(find $(pwd) -name package.json)
           if [ -z "$package_jsons" ]; then
