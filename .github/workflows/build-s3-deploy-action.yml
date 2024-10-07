@@ -25,8 +25,6 @@ jobs:
 
       - name: AWS SDK 설치
         run: |
-          sudo apt install curl unzip -y
-
           # AWS CLI v2 설치
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
