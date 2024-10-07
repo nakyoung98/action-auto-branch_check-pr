@@ -4,6 +4,7 @@
 name: Deploy Build Output From Artifact to S3 Action
 
 on:
+  # 추후 삭제해야함
   push:
   workflow_call:
     inputs:
@@ -28,5 +29,9 @@ jobs:
           # AWS CLI v2 설치
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
+
+          echo "== AWS CLI 설치 =="
+          echo "::group::AWS CLI 설치"
           sudo ./aws/install --update
+          echo "::endgroup::"
           echo $(aws --version)
