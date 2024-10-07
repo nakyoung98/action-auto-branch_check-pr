@@ -55,48 +55,34 @@ jobs:
             no_package_json="true"
             echo "package.json 파일을 찾을 수 없습니다."
           else
-            all_success="success"
-            set +e
-            while IFS= read -r package_json
-            do
-              build_result="success"
-              
-              dir=$(dirname "$package_json")
-              echo "처리 중: $dir"
-              cd "$dir"
-              
-              echo "== 종속성 설치 =="
-              if ! npm ci; then
-                echo "npm ci 실패, npm install을 시도합니다"
-                if ! npm install; then
-                  echo "npm install 실패"
-                  build_result="fail"
-                fi
-              fi
-
-              echo "== 프로젝트 빌드 =="
-              if ! npm run $build_script; then
-                echo "빌드 중 에러가 발생했습니다"
+            set +e          
+            dir=$(dirname "$package_json")
+            echo "처리 중: $dir"
+            cd "$dir"
+            
+            echo "== 종속성 설치 =="
+            if ! npm ci; then
+              echo "npm ci 실패, npm install을 시도합니다"
+              if ! npm install; then
+                echo "npm install 실패"
                 build_result="fail"
               fi
+            fi
 
-              if  [ "$build_result" = "success" ]; then
-                echo "프로젝트 빌드 성공"
-              else
-                echo "프로젝트 빌드 실패"
-                all_success="fail"
-              fi
-            done <<< "$package_jsons"
+            echo "== 프로젝트 빌드 =="
+            if ! npm run $build_script; then
+              echo "빌드 중 에러가 발생했습니다"
+              build_result="fail"
+            fi
 
-            # 결과를 steps.build에 저장 - 다른 곳에서 사용 가능
-            echo "OVERALL_BUILD_RESULT=${all_success}" >> $GITHUB_OUTPUT
-            {
-              # 여러줄 저장 (EOF 사용)
-              echo "EACH_BUILD_RESULTS<<EOF"
-              echo "EOF"
-            } >> "$GITHUB_OUTPUT"
-          fi
+            if  [ "$build_result" = "success" ]; then
+              echo "프로젝트 빌드 성공"
+            else
+              echo "프로젝트 빌드 실패"
+            fi
 
+          # 결과를 steps.build에 저장 - 다른 곳에서 사용 가능
+          echo "BUILD_RESULT=${build_result}" >> $GITHUB_OUTPUT
           echo "NO_PACKAGE_JSON=${no_package_json}" >> $GITHUB_OUTPUT
 
       # https://octokit.github.io/rest.js/v21/#pulls 를 따릅니다
@@ -107,13 +93,11 @@ jobs:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             const noPackageJSON ='${{ steps.build.outputs.NO_PACKAGE_JSON }}';
-            const buildResult = '${{ steps.build.outputs.OVERALL_BUILD_RESULT }}';
-            const eachResults= '${{ steps.build.outputs.EACH_BUILD_RESULTS }}';
+            const buildResult = '${{ steps.build.outputs.BUILD_RESULT }}';
             const reviewResult = noPackageJSON === "false" && buildResult === "success" ? 'APPROVE' : 'REQUEST_CHANGES';
 
             const output = `
             #### 빌드 테스트 결과: ${buildResult}
-            ${eachResults}
             `;
 
             if (noPackageJSON === "true"){
