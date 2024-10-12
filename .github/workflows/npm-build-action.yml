@@ -79,6 +79,8 @@ jobs:
           dist_dir=$(dirname "$package_json")/dist
           echo "BUILD_DIST_DIR=${dist_dir}" >> $GITHUB_OUTPUT
           echo "NO_PACKAGE_JSON=${no_package_json}" >> $GITHUB_OUTPUT
+          env_dir=$(dirname "$package_json")
+          echo "ENV_DIR=${env_dir}" >> $GITHUB_OUTPUT
 
       # https://octokit.github.io/rest.js/v21/#pulls 를 따릅니다
       # build 성공 시 merge approve 합니다
@@ -123,3 +125,11 @@ jobs:
         with:
           name: build-output
           path: ${{steps.build.outputs.BUILD_DIST_DIR}}
+
+      - name: env 파일 artifact로 내보내기
+        uses: actions/upload-artifact@v4
+        with:
+          name: .env
+          path: ${{steps.build.outputs.ENV_DIR}}/.env
+          include-hidden-files: true
+          
